@@ -1,51 +1,52 @@
 #!/bin/bash
 
-TASK_ID="0ace46bc-8f88-4e70-95b9-9502b5a4d1dc"
-MODEL="Qwen/Qwen3-0.6B"
-DATASET="https://gradients.s3.eu-north-1.amazonaws.com/68742916c5fba7e2_test_data.json?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVVZOOA7SA4UOFLPI%2F20250718%2Feu-north-1%2Fs3%2Faws4_request&X-Amz-Date=20250718T123411Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=7cf19bb88267a6922afae0c845964412c45b63abe6b79983dd1ed10494453190"
+TASK_ID="203018b2-96f6-4263-a86e-0cc510266b9b"
+MODEL="princeton-nlp/Sheared-LLaMA-1.3B"
+DATASET="https://gradients.s3.eu-north-1.amazonaws.com/4e92191dccb1ecaa_train_data.json?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVVZOOA7SA4UOFLPI%2F20250902%2Feu-north-1%2Fs3%2Faws4_request&X-Amz-Date=20250902T100815Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Signature=6cab4ec0898631f380ccd5a575e589876888fe4766097ae8feaa06b8033421c1"
 DATASET_TYPE='{
   "field_instruction":"instruct",
+  "field_input": "input",
   "field_output":"output"
 }'
 FILE_FORMAT="s3"
-HOURS_TO_COMPLETE=6
+HOURS_TO_COMPLETE=2
 
 
 # For uploading the outputs
-HUGGINGFACE_TOKEN="Your Huggingface Token"
-WANDB_TOKEN="Your WandB Token"
-HUGGINGFACE_USERNAME="Your Huggingface Username"
+HUGGINGFACE_TOKEN=""
+WANDB_TOKEN=""
+HUGGINGFACE_USERNAME="haihp02"
 EXPECTED_REPO_NAME="instructtest"
-LOCAL_FOLDER="/app/checkpoints/$TASK_ID/$EXPECTED_REPO_NAME"
+LOCAL_FOLDER="/home/user/sn56_tournament/$TASK_ID/$EXPECTED_REPO_NAME"
 
 
-CHECKPOINTS_DIR="$(pwd)/secure_checkpoints"
-OUTPUTS_DIR="$(pwd)/outputs"
+CHECKPOINTS_DIR="/home/user/sn56_tournament/secure_checkpoints"
+OUTPUTS_DIR="/home/user/sn56_tournament/outputs"
 mkdir -p "$CHECKPOINTS_DIR"
-chmod 700 "$CHECKPOINTS_DIR"
+chmod 777 "$CHECKPOINTS_DIR"
 mkdir -p "$OUTPUTS_DIR"
-chmod 700 "$OUTPUTS_DIR"
+chmod 777 "$OUTPUTS_DIR"
 
 # Build the downloader image
-docker build --no-cache -t trainer-downloader -f dockerfiles/trainer-downloader.dockerfile .
+docker build -t trainer-downloader -f dockerfiles/trainer-downloader.dockerfile .
 
 # Build the trainer image
-docker build --no-cache -t standalone-text-trainer -f dockerfiles/standalone-text-trainer.dockerfile .
+docker build -t standalone-text-trainer -f dockerfiles/standalone-text-trainer.dockerfile .
 
 # Build the hf uploader image
-docker build --no-cache -t hf-uploader -f dockerfiles/hf-uploader.dockerfile .
+docker build -t hf-uploader -f dockerfiles/hf-uploader.dockerfile .
 
 # Download model and dataset
-echo "Downloading model and dataset..."
-docker run --rm \
-  --volume "$CHECKPOINTS_DIR:/cache:rw" \
-  --name downloader-image \
-  trainer-downloader \
-  --task-id "$TASK_ID" \
-  --model "$MODEL" \
-  --dataset "$DATASET" \
-  --file-format "$FILE_FORMAT" \
-  --task-type "InstructTextTask"
+# echo "Downloading model and dataset..."
+# docker run --rm \
+#   --volume "$CHECKPOINTS_DIR:/cache:rw" \
+#   --name downloader-image \
+#   trainer-downloader \
+#   --task-id "$TASK_ID" \
+#   --model "$MODEL" \
+#   --dataset "$DATASET" \
+#   --file-format "$FILE_FORMAT" \
+#   --task-type "InstructTextTask"
 
 
 docker run --rm --gpus all \
